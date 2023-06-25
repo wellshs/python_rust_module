@@ -1,10 +1,12 @@
 import time
+from functools import wraps
 
 import rust_module
 from matplotlib import pyplot as plt
 
 
 def time_elapsed(fn):
+    @wraps(fn)
     def wrapper(*args, **kwargs):
         start = time.time()
         result = fn(*args, **kwargs)
@@ -23,36 +25,50 @@ def python_sum_to_n(n):
 
 
 @time_elapsed
+def python_faster_sum_to_n(n):
+    return sum(range(1, n + 1))
+
+
+@time_elapsed
 def rust_sum_to_n(n):
     return rust_module.sum_to_n(n)
 
 
 if __name__ == "__main__":
     test_input = [pow(10, i) for i in range(8)]
-    python_output = [python_sum_to_n(n) for n in test_input]
-    rust_output = [rust_sum_to_n(n) for n in test_input]
+    test_functions = [python_sum_to_n, python_faster_sum_to_n, rust_sum_to_n]
+    outputs = [[fn(n) for n in test_input] for fn in test_functions]
 
     # test to output is equal
-    python_result = [output[0] for output in python_output]
-    rust_result = [output[0] for output in rust_output]
-    assert python_result == rust_result
+    first_result = [result for result, _ in outputs[0]]
+    for output in outputs:
+        assert first_result == [result for result, _ in output]
+
+    # transform elapsed time
+    elapsed_dict = {
+        fn.__name__: [elapsed for _, elapsed in output]
+        for fn, output in zip(test_functions, outputs)
+    }
 
     # compare elapsed time with graph
-    python_elapsed = [output[1] for output in python_output]
-    rust_elapsed = [output[1] for output in rust_output]
-    plt.plot(test_input, python_elapsed, label="python")
-    plt.plot(test_input, rust_elapsed, label="rust")
-    plt.xscale("log")
+    for fn_name, elapsed in elapsed_dict.items():
+        plt.plot(test_input, elapsed, label=fn_name)
     plt.yscale("log")
-    plt.title("sum_to_n elapsed time")
+    plt.xscale("log")
     plt.legend()
+    plt.title("sum_to_n elapsed time")
     plt.show()
 
+    print(elapsed_dict.keys())
     # compare ratio of elapsed time python over rust
-    ratio = [python / rust for python, rust in zip(python_elapsed, rust_elapsed)]
-    plt.plot(test_input, ratio)
+    rust_elapsed = elapsed_dict["rust_sum_to_n"]
+    for fn_name, elapsed in elapsed_dict.items():
+        ratio = [base / rust for base, rust in zip(elapsed, rust_elapsed)]
+        plt.plot(test_input, ratio, label=fn_name)
+        for i, v in enumerate(ratio):
+            plt.text(test_input[i], v, "{:.2f}".format(v))
+
     plt.xscale("log")
-    for i, v in enumerate(ratio):
-        plt.text(test_input[i], v, "{:.2f}".format(v))
+    plt.legend()
     plt.title("sum_to_n elapsed time ratio")
     plt.show()
