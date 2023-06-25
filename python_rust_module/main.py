@@ -35,7 +35,8 @@ def rust_sum_to_n(n):
 
 
 if __name__ == "__main__":
-    test_input = [pow(10, i) for i in range(8)]
+    file_abs_folder_path = f"{__file__[:__file__.rfind('/')]}"
+    test_input = [pow(10, i) for i in range(7)]
     test_functions = [python_sum_to_n, python_faster_sum_to_n, rust_sum_to_n]
     outputs = [[fn(n) for n in test_input] for fn in test_functions]
 
@@ -57,9 +58,9 @@ if __name__ == "__main__":
     plt.xscale("log")
     plt.legend()
     plt.title("sum_to_n elapsed time")
-    plt.show()
+    plt.savefig(f"{file_abs_folder_path}/../images/sum_to_n_elapsed_time.png")
+    plt.clf()
 
-    print(elapsed_dict.keys())
     # compare ratio of elapsed time python over rust
     rust_elapsed = elapsed_dict["rust_sum_to_n"]
     for fn_name, elapsed in elapsed_dict.items():
@@ -71,4 +72,5 @@ if __name__ == "__main__":
     plt.xscale("log")
     plt.legend()
     plt.title("sum_to_n elapsed time ratio")
-    plt.show()
+    # plt with high resolution
+    plt.savefig(f"{file_abs_folder_path}/../images/sum_to_n_elapsed_time_ratio.png")
