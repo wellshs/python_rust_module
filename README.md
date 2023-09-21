@@ -11,7 +11,8 @@ rust
 
 ## setup
 ```shell
-poetry install
+poetry install # install python dependencies
+mnaturin develop # build & link rust module
 ```
 
 ## run
